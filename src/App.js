@@ -16,7 +16,7 @@ function App() {
   const [filter, setFilter] = useState('');
   const [favourites, setFavourite] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalResults, setTotalResults] = useState(0);
+  // const [totalResults, setTotalResults] = useState(0);
   const moviesPerPage = 4;
 
   // create handlesearch funciton
