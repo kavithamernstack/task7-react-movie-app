@@ -16,33 +16,39 @@ function App() {
   const [filter, setFilter] = useState('');
   const [favourites, setFavourite] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  // const [totalResults, setTotalResults] = useState(0);
-  const moviesPerPage = 4;
+  const [totalResults, setTotalResults] = useState(0);
+  const moviesPerPage = 20;
+  const [searchTerm, setSearchTerm] = useState("movies");
 
   // create handlesearch funciton
-  const handleSearch = useCallback(async (searchTerm) => {
+  const handleSearch = useCallback(async (term = searchTerm, page = currentPage) => {
     try {
-      const data = await SearchMovie(searchTerm, filter);
-      console.log("API Response:", data);
-      setMovies(data.Search || [])
+      setLoading(true)
+      const data = await SearchMovie(term, filter, page);
+      if (data.Response === "True") {
+        setMovies(data.Search || []);
+        setTotalResults(parseInt(data.totalResults, 10));
+      } else {
+        setMovies([]);
+        setTotalResults(0);
+        setError(data.Error);
+      }
+      // console.log("API Response:", data);  
     } catch (error) {
       setError(error.message)
     } finally {
       setLoading(false)
     }
-  }, [filter]);
+  }, [filter, searchTerm, currentPage]);
 
   useEffect(() => {
-    const loadDefaultMovies = async () => {
-      await handleSearch("movies")
-
-    }
-    loadDefaultMovies();
-  }, [handleSearch])
+    handleSearch(searchTerm, currentPage);
+  }, [handleSearch, currentPage, filter])
 
   // fliter funciton 
   const handleFilterChange = (filter) => {
-    setFilter(filter)
+    setFilter(filter);
+    setCurrentPage(1);
   }
 
   // add to favourite
@@ -66,11 +72,7 @@ function App() {
     setCurrentPage(pageNumber);
   };
 
-  const indexOfLastMovie = currentPage * moviesPerPage;
-  const indexOfFirstMovie = indexOfLastMovie - moviesPerPage;
-  const currentMovies = movies.slice(indexOfFirstMovie, indexOfLastMovie);
-
-  const totalPages = Math.ceil(movies.length / moviesPerPage);
+  const totalPages = Math.ceil(totalResults / moviesPerPage);
   const paginationNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
 
 
@@ -94,7 +96,7 @@ function App() {
               <>
                 <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-4 mt-4 px-4">
                   <div className="w-full sm:w-auto">
-                    <SearchBar onSearch={handleSearch} />
+                    <SearchBar onSearch={(term) => { setSearchTerm(term); setCurrentPage(1); handleSearch(term, 1); }} />
                   </div>
 
                   <div className="fw-full sm:w-auto">
@@ -113,7 +115,7 @@ function App() {
               </>
             } />
           </Routes>
-          <main className="p-6">
+          <main className="p-1">
             <Routes>
               <Route
                 path="/"
@@ -125,28 +127,13 @@ function App() {
                     ) : (
                       <>
                         <MovieList
-                          movies={currentMovies}
+                          movies={movies}
                           favourites={favourites}
                           onAddFavourite={addtoFavourite}
+                          currentPage={currentPage}
+                          totalPages={totalPages}
+                          onPageChange={handlePagination}
                         />
-
-                        {/* ✅ Pagination UI */}
-                        {movies.length > 0 && (
-                          <div className="flex justify-center mt-10 flex-wrap gap-2">
-                            {paginationNumbers.map((pageNumber) => (
-                              <button
-                                key={pageNumber}
-                                onClick={() => handlePagination(pageNumber)}
-                                className={`px-4 py-2 rounded-md font-semibold shadow transition-all duration-200 ${currentPage === pageNumber
-                                    ? "bg-white text-indigo-600 font-bold scale-105"
-                                    : "bg-white bg-opacity-20 text-indigo-600 hover:bg-black hover:text-indigo-600"
-                                  }`}
-                              >
-                                {pageNumber}
-                              </button>
-                            ))}
-                          </div>
-                        )}
                       </>
                     )}
                   </>
