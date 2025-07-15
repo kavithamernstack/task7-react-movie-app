@@ -43,7 +43,7 @@ function App() {
 
   useEffect(() => {
     handleSearch(searchTerm, currentPage);
-  }, [handleSearch, currentPage, filter])
+  }, [handleSearch, searchTerm, currentPage, filter])
 
   // fliter funciton 
   const handleFilterChange = (filter) => {
@@ -73,7 +73,7 @@ function App() {
   };
 
   const totalPages = Math.ceil(totalResults / moviesPerPage);
-  const paginationNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
+  // const paginationNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
 
 
   // condition if data is loading
